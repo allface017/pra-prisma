@@ -36,6 +36,12 @@ app.get('/', async (c) => {
 // ユーザー一覧を取得
 app.get('/users', async (c) => {
   try {
+    // DATABASE_URLが設定されているかチェック
+    if (!c.env.DATABASE_URL) {
+      console.error('DATABASE_URL is not set')
+      return c.json({ error: 'DATABASE_URL is not configured' }, 500)
+    }
+    
     const prisma = getPrisma(c.env.DATABASE_URL)
     const users = await prisma.user.findMany({
       include: { posts: true }
@@ -43,7 +49,10 @@ app.get('/users', async (c) => {
     return c.json({ users })
   } catch (error) {
     console.error('Error fetching users:', error)
-    return c.json({ error: 'Failed to fetch users' }, 500)
+    return c.json({ 
+      error: 'Failed to fetch users',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 500)
   }
 })
 

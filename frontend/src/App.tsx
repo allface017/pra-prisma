@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 // バックエンドAPIのベースURL
-const API_BASE_URL = 'http://localhost:8787';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend.s-muramori-sys22.workers.dev';
 
 // 型定義
 interface User {
