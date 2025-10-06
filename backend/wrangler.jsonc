@@ -5,5 +5,10 @@
   "compatibility_date": "2025-10-05",
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "env": {
+    "preview": {
+      "name": "backend-preview"
+    }
+  }
 }

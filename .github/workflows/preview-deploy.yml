@@ -1,0 +1,99 @@
+name: Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, master]
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    name: Deploy Backend to Cloudflare Workers Preview
+    outputs:
+      backend-url: ${{ steps.deploy-backend.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Deploy backend to Cloudflare Workers Preview
+        id: deploy-backend
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: backend
+          command: deploy --env preview
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    name: Deploy Frontend to Cloudflare Pages Preview
+    needs: deploy-backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend with preview backend URL
+        run: |
+          cd frontend
+          echo "VITE_API_BASE_URL=${{ needs.deploy-backend.outputs.backend-url }}" > .env.production
+          npm run build
+
+      - name: Deploy frontend to Cloudflare Pages Preview
+        id: deploy-frontend
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: frontend
+          command: pages deploy dist --project-name frontend --branch preview-${{ github.event.number }}
+
+      - name: Comment PR with preview URLs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backendUrl = '${{ needs.deploy-backend.outputs.backend-url }}';
+            const frontendUrl = `https://preview-${{ github.event.number }}.frontend-5xn.pages.dev`;
+            
+            const comment = `🚀 **Preview Deployment Ready!**
+            
+            📱 **Frontend Preview:** ${frontendUrl}
+            ⚙️ **Backend API:** ${backendUrl}
+            
+            🔗 **Test the API directly:**
+            - Users: ${backendUrl}/users
+            - Posts: ${backendUrl}/posts
+            
+            This preview will be automatically updated when you push new commits to this PR.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
