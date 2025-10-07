@@ -1,56 +1,57 @@
-# Cloudflare-GitHub 連携設定ガイド
+# Cloudflare Workers and Pages Bot 設定ガイド
 
-このガイドでは、GitHubリポジトリとCloudflare WorkersおよびCloudflare Pagesを連携させる方法を説明します。
+このガイドでは、Cloudflare Workers and Pages botを使用した自動デプロイ設定について説明します。
 
-## 🔧 GitHub Actions による自動デプロイ
+## � Cloudflare Bot による自動デプロイ
 
-### 現在の設定状況
+### 現在の設定方針
 
-✅ **preview-deploy.yml** - Pull Request時の自動preview環境デプロイ  
-✅ **production-deploy.yml** - main/masterブランチへのpush時の本番デプロイ  
-✅ **cleanup-preview.yml** - PR終了時のpreview環境クリーンアップ  
+⚡ **Cloudflare Workers and Pages bot** - プルリクエストと本番の自動デプロイ  
+✅ **GitHub Actions** - CI（テスト・ビルド）のみ実行  
+🔄 **完全自動化** - デプロイに関してはCloudflareが完全管理  
 
 ### 自動デプロイの動作
 
-- **Pull Request作成/更新時**: preview環境に自動デプロイ
-- **main/masterブランチへのマージ時**: 本番環境に自動デプロイ
-- **Pull Request終了時**: preview環境を自動削除
+- **Pull Request作成/更新時**: Cloudflare botが自動でプレビュー環境にデプロイ
+- **main ブランチへのマージ時**: Cloudflare botが自動で本番環境にデプロイ
+- **GitHub Actions**: CI（テスト・型チェック・ビルド確認）のみ実行
 
-## 🌐 Cloudflare Dashboard での追加設定
+## 🌐 Cloudflare Workers and Pages Bot 設定
 
-### 1. Cloudflare Pages の GitHub 連携
+### 1. バックエンド (Cloudflare Workers) の GitHub 連携
 
 1. [Cloudflare Dashboard](https://dash.cloudflare.com/) にログイン
-2. **Pages** セクションに移動
-3. 既存の `frontend` プロジェクトを選択
-4. **Settings** → **Source** タブを開く
-5. **Connect to Git** をクリック
-6. GitHub リポジトリを選択: `allface017/pra-prisma`
-7. 以下の設定を行う：
+2. **Workers & Pages** セクションに移動
+3. **Create application** → **Workers** → **Create Worker**
+4. Worker名: `backend` を作成
+5. **Settings** → **Integrations** タブを開く
+6. **GitHub** セクションで **Connect to GitHub** をクリック
+7. GitHub リポジトリを選択: `allface017/pra-prisma`
+8. 以下の設定を行う：
    ```
-   Production branch: main (または master)
+   Production branch: main
+   Preview branches: すべてのブランチ (プルリクエストを含む)
+   Root directory: backend
+   ```
+
+### 2. フロントエンド (Cloudflare Pages) の GitHub 連携
+
+1. **Pages** セクションに移動
+2. **Create a project** → **Connect to Git**
+3. GitHub リポジトリを選択: `allface017/pra-prisma`
+4. 以下の設定を行う：
+   ```
+   Project name: frontend
+   Production branch: main
    Build command: npm run build
    Build output directory: dist
    Root directory: frontend
    ```
 
-### 2. Cloudflare Workers の GitHub 連携
-
-1. **Workers & Pages** セクションに移動
-2. 既存の `backend` Workerを選択
-3. **Settings** → **Triggers** タブを開く
-4. **Git Repository** の **Connect Repository** をクリック
-5. GitHub リポジトリを選択: `allface017/pra-prisma`
-6. 以下の設定を行う：
-   ```
-   Production branch: main (または master)
-   Preview branch: すべてのブランチ
-   ```
-
 ### 3. 環境変数の設定
 
 #### Workers (Backend) の環境変数
-1. **Settings** → **Variables** タブ
+1. **Workers & Pages** → **backend** → **Settings** → **Variables**
 2. **Environment Variables** セクションで以下を追加：
    ```
    DATABASE_URL: (Prisma Accelerate の URL)
@@ -58,11 +59,33 @@
 3. **Encrypt** にチェックを入れる
 
 #### Pages (Frontend) の環境変数
-1. **Settings** → **Environment Variables** タブ
+1. **Pages** → **frontend** → **Settings** → **Environment Variables**
 2. **Production** と **Preview** 両方に以下を設定：
    ```
    VITE_API_BASE_URL: https://backend.s-muramori-sys22.workers.dev
    ```
+
+## ✨ Cloudflare Bot の利点
+
+### 🔄 完全自動化
+- **プルリクエスト作成時**: 自動でプレビュー環境を作成
+- **コミット追加時**: プレビュー環境を自動更新
+- **PR マージ時**: 自動で本番環境にデプロイ
+- **PR クローズ時**: プレビュー環境を自動削除
+
+### 💬 GitHub 統合
+- PRに自動でプレビューURLをコメント投稿
+- デプロイ状況をGitHub Checksで表示
+- デプロイ失敗時はPRにエラー詳細を投稿
+
+### ⚡ 高速デプロイ
+- Cloudflareの高速エッジネットワークを活用
+- ゼロダウンタイムデプロイ
+- 瞬時のロールバック機能
+
+### 💰 コスト効率
+- GitHub Actionsの使用時間を最小化
+- Cloudflareの豊富な無料枠を活用
 
 ## 📊 デプロイメント監視
 
