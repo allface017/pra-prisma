@@ -25,7 +25,7 @@ app.use('/*', cors({
 // API のウェルカムメッセージ
 app.get('/', async (c) => {
   return c.json({ 
-    message: 'Welcome to Hono + Prisma API!',
+    message: 'Welcome to Hono + Prisma API! backend is running.',
     endpoints: {
       users: '/users',
       posts: '/posts'

@@ -199,3 +199,7 @@ pra-prisma/
 - **自動ヘルスチェック**: 毎時実行され、問題時にIssueを自動作成
 
 詳細な連携設定は [`CLOUDFLARE_GITHUB_INTEGRATION.md`](./CLOUDFLARE_GITHUB_INTEGRATION.md) を参照してください。
+
+## その他
+- **コードフォーマット**: `prettier`を使用
+- **Lint**: `eslint`を使用 
