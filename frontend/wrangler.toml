@@ -1,0 +1,9 @@
+name = "frontend"
+compatibility_date = "2025-10-05"
+pages_build_output_dir = "dist"
+
+[env.production]
+vars = { VITE_API_BASE_URL = "https://backend.s-muramori-sys22.workers.dev" }
+
+[env.preview]  
+vars = { VITE_API_BASE_URL = "https://backend.s-muramori-sys22.workers.dev" }
