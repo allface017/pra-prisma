@@ -8,7 +8,9 @@
   ],
   "env": {
     "preview": {
-      "name": "backend-preview"
+      "name": "backend-preview",
+      "main": "src/index.ts",
+      "compatibility_date": "2025-10-05"
     }
   }
 }
